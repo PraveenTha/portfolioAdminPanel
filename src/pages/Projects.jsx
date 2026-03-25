@@ -27,6 +27,7 @@ const Projects = () => {
   const fetchProjects = async () => {
     try {
       const res = await api.get("/admin/projects");
+      console.log("Projects:", res.data); // ✅ DEBUG
       setProjects(res.data);
     } catch (err) {
       console.error("Fetch projects error:", err);
@@ -74,7 +75,6 @@ const Projects = () => {
         fd.append("projectImage", image);
       }
 
-      // ✅ IMPORTANT: NO HEADERS HERE
       if (edit) {
         await api.put(`/admin/projects/${edit._id}`, fd);
       } else {
@@ -146,12 +146,16 @@ const Projects = () => {
           {projects.map((p) => (
             <div className="m-3" key={p._id}>
               <div className="card project-card h-100">
-                {p.image && (
+
+                {/* ✅ IMAGE FIX */}
+                {p.image ? (
                   <img
                     src={p.image}
                     alt={p.title}
                     className="project-thumb"
                   />
+                ) : (
+                  <div className="no-image">No Image</div>
                 )}
 
                 <div className="p-3">
