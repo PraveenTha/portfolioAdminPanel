@@ -16,12 +16,13 @@
 }
 
 .modal-backdrop.skill-modal {
-  max-width: 500px;
+  max-width: 100%;
   padding: 20px;
   color: #fff;
   background: transparent;
-  max-height: 300px;
-  top: 50%;
+  max-height: 100vh;
+  top: 30%;
   left: 50%;
   transform: translate(-50%, -50%);
+  background:#000000f3;
 }
