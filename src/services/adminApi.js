@@ -1,14 +1,16 @@
 import axios from "axios";
 
 /* ===========================
-   BASE URL SAFETY CHECK
+   BASE URL
 =========================== */
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 if (!BASE_URL) {
-  console.error("❌ VITE_API_URL is not defined in environment variables");
+  console.error("❌ VITE_API_URL missing — check .env or Vercel env");
 }
+
+console.log("✅ API BASE URL:", BASE_URL);
 
 /* ===========================
    AXIOS INSTANCE
@@ -16,26 +18,31 @@ if (!BASE_URL) {
 
 const api = axios.create({
   baseURL: BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-  timeout: 15000, // ✅ prevent hanging requests
+  timeout: 20000,
 });
 
 /* ===========================
-   REQUEST INTERCEPTOR (TOKEN)
+   REQUEST INTERCEPTOR
 =========================== */
 
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("adminToken");
 
+    // ✅ Token attach
     if (
       token &&
       !config.url.includes("/auth/login") &&
       !config.url.includes("/auth/register")
     ) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    // ✅ IMPORTANT: multipart fix (image upload ke liye)
+    if (config.data instanceof FormData) {
+      config.headers["Content-Type"] = "multipart/form-data";
+    } else {
+      config.headers["Content-Type"] = "application/json";
     }
 
     return config;
@@ -51,25 +58,28 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
 
-    /* ===== 401 UNAUTHORIZED ===== */
+    // 🔐 Unauthorized
     if (error.response?.status === 401) {
-      console.warn("⚠️ Unauthorized – redirecting to login");
+      console.warn("⚠️ Unauthorized — redirecting");
       localStorage.removeItem("adminToken");
       window.location.href = "/";
     }
 
-    /* ===== 404 ERROR (IMPORTANT FIX) ===== */
+    // ❌ 404 Debug
     if (error.response?.status === 404) {
-      console.error("❌ API 404 ERROR → Check endpoint or BASE_URL");
-      console.error("👉 URL:", error.config?.baseURL + error.config?.url);
+      console.error("❌ 404 ERROR");
+      console.error(
+        "👉 FULL URL:",
+        error.config?.baseURL + error.config?.url
+      );
     }
 
-    /* ===== NETWORK ERROR ===== */
+    // 🌐 Network Issue
     if (!error.response) {
-      console.error("🌐 Network Error – Backend may be down (Render sleep)");
+      console.error("🌐 Backend down or Render sleeping");
     }
 
-    console.error("API Error:", error.response?.status, error.message);
+    console.error("API ERROR:", error.response?.status, error.message);
 
     return Promise.reject(error);
   }
