@@ -27,7 +27,6 @@ const Projects = () => {
   const fetchProjects = async () => {
     try {
       const res = await api.get("/admin/projects");
-      console.log("Projects:", res.data); // ✅ DEBUG
       setProjects(res.data);
     } catch (err) {
       console.error("Fetch projects error:", err);
@@ -54,6 +53,7 @@ const Projects = () => {
 
     try {
       const fd = new FormData();
+
       fd.append("title", form.title);
       fd.append("shortDescription", form.shortDescription);
       fd.append("description", form.description);
@@ -75,10 +75,24 @@ const Projects = () => {
         fd.append("projectImage", image);
       }
 
+      // 🔥 DEBUG (optional)
+      for (let pair of fd.entries()) {
+        console.log(pair[0], pair[1]);
+      }
+
+      // ✅ FIXED REQUEST
       if (edit) {
-        await api.put(`/admin/projects/${edit._id}`, fd);
+        await api.put(`/admin/projects/${edit._id}`, fd, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
       } else {
-        await api.post("/admin/projects", fd);
+        await api.post("/admin/projects", fd, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
       }
 
       closeModal();
@@ -147,7 +161,6 @@ const Projects = () => {
             <div className="m-3" key={p._id}>
               <div className="card project-card h-100">
 
-                {/* ✅ IMAGE FIX */}
                 {p.image ? (
                   <img
                     src={p.image}
